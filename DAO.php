@@ -29,12 +29,15 @@ class DAO
         switch($choix) {
             case 1:
                 $personnage = $this->getPersonnage(1);
+                $this->afficherInfosPersonnage(1);
                 break;
             case 2:
                 $personnage = $this->getPersonnage(2);
+                $this->afficherInventaire(2);
                 break;
             case 3:
                 $personnage = $this->getPersonnage(3);
+                $this->afficherInventaire(3);
                 break;
             case 4:
                 $personnage = $this->getPersonnage(4);
@@ -83,7 +86,6 @@ class DAO
     // } 
 
     public function afficherInventaire($id) {
-        echo "\033[2J\033[;H";
 
         echo "Voici votre inventaire :\n";
         $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
@@ -100,5 +102,32 @@ class DAO
             echo "Aucun item\n";
         }
     }
+    public function afficherInfosPersonnage($id) {
+        echo "\033[2J\033[;H";
+    
+        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
+    
+        $result = $sql->fetch();
+    
+        if ($result === false) {
+            echo "Personnage introuvable.\n";
+            return;
+        }
+    
+        echo "Informations du personnage :\n";
+        echo "Nom : " . $result["nom"] . "\n";
+        echo "Points de vie : " . $result["points_de_vie"] . "\n";
+        echo "Points d'attaque : " . $result["points_d_attaque"] . "\n";
+        echo "Points de défense : " . $result["points_de_defense"] . "\n";
+        echo "Expérience : " . $result["experience"] . "\n";
+        echo "Niveau : " . $result["niveau"] . "\n";
+
+        $this->afficherInventaire($id);
+    }
+    
 }
+
 ?>
