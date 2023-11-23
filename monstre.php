@@ -1,20 +1,20 @@
 <?php
 class Monstre{
     private $id;
-    private $name;
-    private $health;
-    private $attackPoints;
-    private $defensePoints;
+    private $nom;
+    private $pointDeVie;
+    private $pointAttaque;
+    private $experience;
     private $level;
     private $salle_id;
 
-    public function __construct($id,$name, $health, $attackPoints, $defensePoints, $salle_id) {
-        $this->id =$id;
-        $this->name = $name;
-        $this->health = $health;
-        $this->attackPoints = $attackPoints;
-        $this->defensePoints = $defensePoints;
-        $this->level = 1;
+    public function __construct($id, $nom, $pointDeVie, $pointAttaque, $experience, $level, $salle_id) {
+        $this->id = $id;
+        $this->nom = $nom;
+        $this->pointDeVie = $pointDeVie;
+        $this->pointAttaque = $pointAttaque;
+        $this->experience = $experience;
+        $this->level = $level;
         $this->salle_id = $salle_id;
     }
 
@@ -22,20 +22,20 @@ class Monstre{
         return $this->id;
     }
 
-    public function getName() {
-        return $this->name;
+    public function getNom() {
+        return $this->nom;
     }
 
-    public function getHealth() {
-        return $this->health;
+    public function getPointDeVie() {
+        return $this->pointDeVie;
     }
 
-    public function getAttackPoints() {
-        return $this->attackPoints;
+    public function getPointAttaque() {
+        return $this->pointAttaque;
     }
 
-    public function getDefensePoints() {
-        return $this->defensePoints;
+    public function getExperience() {
+        return $this->experience;
     }
 
     public function getLevel() {

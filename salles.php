@@ -3,29 +3,23 @@
 class Salle {
     protected $id;
     protected $nom;
-    protected $type;
     protected $description;
 
-    public function __construct($id, $nom, $type, $description) {
+    public function __construct($id, $nom ,$description) {
         $this->id = $id;
         $this->nom = $nom;
-        $this->type = $type;
         $this->description = $description;
     }
 
     public function getId() {
         return $this->id;
     }
-
-    public function getNom() {
+    
+    public function getNom(){
         return $this->nom;
     }
 
-    public function getType() {
-        return $this->type;
-    }
-
-    public function getDescription() {
+    public function getDescription(){
         return $this->description;
     }
 }
@@ -34,8 +28,8 @@ class SallePiege extends Salle
 {
     private $degats;
 
-    public function __construct($id, $nom, $type ,$description, $degats) {
-        parent::__construct($id, $nom, $type ,$description);
+    public function __construct($id, $nom ,$description, $degats) {
+        parent::__construct($id, $nom ,$description);
         $this->degats = $degats;
     }
 
@@ -47,8 +41,8 @@ class SallePiege extends Salle
 class SalleMarchand extends Salle {
     private $objet;
 
-    public function __construct($id, $nom, $type, $description, $objet) {
-        parent::__construct($id, $nom, $type, $description);
+    public function __construct($id, $nom ,$description, $objet) {
+        parent::__construct($id, $nom ,$description);
         $this->objet = $objet;
     }
 

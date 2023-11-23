@@ -8,61 +8,79 @@ class DAO
     }
 
     public function choixPersonnage() {
-        echo "\033[2J\033[;H";
-
-        echo "Voici la liste des personnages\n\n";
-        $sql = $this->db->prepare("SELECT * FROM personnages");
-        $sql->execute();
-        $result = $sql->fetchAll(PDO::FETCH_CLASS, 'Personnage', array());
-
-        foreach($result as $personnage) {
-            echo $personnage->getId() . ". " . $personnage->getNom() . "\n";
+        // Implémentation de la logique pour choisir un personnage
+        echo "Choisissez un personnage par son ID :\n";
+        $personnages = $this->getAllPersonnages();
+        foreach ($personnages as $personnage) {
+            echo "{$personnage['id']}. {$personnage['nom']}\n";
         }
 
-        if (count($result) == 0) {
-            echo "Aucun personnage\n";
+        $choix = readline("Entrez l'ID du personnage : ");
+        $personnage = $this->getPersonnageById($choix);
+
+        return $personnage;
+    }
+
+    public function chargerPartie($personnageId) {
+        // Implémentation de la logique pour charger une partie
+        $personnage = $this->getPersonnageById($personnageId);
+
+        return $personnage;
+    }
+
+    public function afficherInventaire($personnageId) {
+        $inventaire = $this->getInventaireByPersonnageId($personnageId);
+        echo "Inventaire du personnage :\n";
+        $inventaire = $dao->getInventaireByPersonnageId($this->id);
+        echo "Inventaire du personnage {$this->nom} :\n";
+        foreach ($inventaire as $objet) {
+            echo "{$objet['objet_id']}. {$objet['nom_objet']}\n";
         }
 
-        $choix = readline();
+    }
 
-        foreach($result as $personnage) {
-            if ($personnage->getId() == $choix) {
-                echo "\033[2J\033[;H";
-                echo "Vous avez choisi " . $personnage->getNom() . "\n";
-                $personnage->afficherInventaire($this);
-                return $personnage;
-            }
+    private function getAllPersonnages() {
+        // Récupère tous les personnages de la base de données
+        $query = "SELECT * FROM personnages";
+        $result = $this->db->query($query);
+
+        return $result->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getPersonnageById($personnageId) {
+        // Récupère un personnage par son ID
+        $query = "SELECT * FROM personnages WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $personnageId);
+        $stmt->execute();
+    
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result) {
+            return new Personnage(
+                $result['id'],
+                $result['nom'],
+                $result['points_de_vie'],
+                $result['points_d_attaque'],
+                $result['points_de_defense'],
+                $result['experience'],
+                $result['niveau']
+            );
+        } else {
+            return null;
         }
-
-        echo "Ce personnage n'existe pas\n";
-        exit;
     }
     
-    
 
-    public function afficherInventaire(Personnage $personnage) {
-        $query = "
-            SELECT o.nom AS nom_objet
-            FROM inventaire_personnage ip
-            JOIN objet o ON ip.objet_id = o.id
-            WHERE ip.personnage_id = {$personnage->getId()}
-        ";
+    private function getInventaireByPersonnageId($personnageId) {
+        // Récupère l'inventaire d'un personnage par son ID
+        $query = "SELECT ip.objet_id, o.nom_objet FROM inventaire_personnage ip
+                  JOIN objets o ON ip.objet_id = o.id
+                  WHERE ip.personnage_id = :personnage_id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':personnage_id', $personnageId);
+        $stmt->execute();
 
-        $result = mysqli_query($this->db, $query);
-        $inventaire = [];
-
-        while ($row = mysqli_fetch_assoc($result)) {
-            $inventaire[] = $row['nom_objet'];
-        }
-
-        echo "Inventaire de " . $personnage->getNom() . " :\n";
-
-        if (count($inventaire) > 0) {
-            foreach ($inventaire as $objet) {
-                echo "- $objet\n";
-            }
-        } else {
-            echo "L'inventaire est vide.\n";
-        }
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
