@@ -24,4 +24,4 @@ class Salles {
     public function getDescription(){
         return $this->description;
     }
-    }
+}
