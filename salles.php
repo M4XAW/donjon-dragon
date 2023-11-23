@@ -1,6 +1,7 @@
 <?php
 
-class Salle {
+class Salle 
+{
     protected $id;
     protected $nom;
     protected $description;
@@ -24,6 +25,20 @@ class Salle {
     }
 }
 
+class SalleCombat extends Salle
+{
+    private $monstre;
+
+    public function __construct($id, $nom ,$description, $monstre) {
+        parent::__construct($id, $nom ,$description);
+        $this->monstre = $monstre;
+    }
+
+    public function getMonstre() {
+        return $this->monstre;
+    }
+}
+
 class SallePiege extends Salle
 {
     private $degats;
@@ -38,7 +53,8 @@ class SallePiege extends Salle
     }
 }
 
-class SalleMarchand extends Salle {
+class SalleMarchand extends Salle 
+{
     private $objet;
 
     public function __construct($id, $nom ,$description, $objet) {
@@ -48,5 +64,19 @@ class SalleMarchand extends Salle {
 
     public function getObjet() {
         return $this->objet;
+    }
+}
+
+class SalleEnigme extends Salle 
+{
+    private $enigme;
+
+    public function __construct($id, $nom ,$description, $enigme) {
+        parent::__construct($id, $nom ,$description);
+        $this->enigme = $enigme;
+    }
+
+    public function getEnigme() {
+        return $this->enigme;
     }
 }

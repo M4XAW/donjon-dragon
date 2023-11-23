@@ -50,7 +50,7 @@ $dao = new DAO($db);
 
 echo "Que voulez-vous faire ?\n";
 echo "1. Jouer\n";
-echo "2. Charger une partie\n";
+echo "2. Nouvelle partie\n";
 echo "3. Quitter\n\n";
 
 $choix = readline();

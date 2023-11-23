@@ -42,15 +42,17 @@ class DAO
                 $personnage = $this->getPersonnage(3);
                 $this->afficherInventaire(3);
                 break;
-            case 4:
-                $personnage = $this->getPersonnage(4);
-                break;
             default:
                 echo "Ce personnage n'existe pas\n";
                 exit;
         }
 
-        return $personnage;
+        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
+        $sql->execute([
+            "id" => $choix
+        ]);
+
+        return;
     }
 
     public function getPersonnage($id) {
@@ -98,7 +100,6 @@ class DAO
     // } 
 
     public function afficherInventaire($id) {
-
         echo "Voici votre inventaire :\n";
         $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
         $sql->execute([
