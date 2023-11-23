@@ -2,14 +2,14 @@
 
 class Weapon 
 {
-    public $name;
-    public $damage;
-    public $levelRequired;
+    public $nom;
+    public $degats;
+    public $levelRequie;
 
-    public function __construct($name, $damage, $levelRequired) {
-        $this->name = $name;
-        $this->damage = $damage;
-        $this->levelRequired = $levelRequired;
+    public function __construct($nom, $degats, $levelRequie) {
+        $this->nom = $nom;
+        $this->degats = $degats;
+        $this->levelRequie = $levelRequie;
     }
 
     
