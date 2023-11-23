@@ -53,6 +53,8 @@ class DAO
             "id" => $id
         ]);
         $result = $sql->fetch();
+        echo "\033[2J\033[;H";
+
         echo "Vous avez choisi " . $result["nom"] . "\n";
         return $result;
     }

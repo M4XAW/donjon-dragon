@@ -1,10 +1,10 @@
 <?php
 class Salle 
 {
-    private $id;
-    private $nom;
-    private $type;
-    private $description;
+    protected $id;
+    protected $nom;
+    protected $type;
+    protected $description;
 
     public function __construct($id, $nom, $type ,$description) {
         $this->id = $id;
@@ -29,6 +29,8 @@ class Salle
 
 class SallePiege extends Salle
 {
+    private $degats;
+
     public function __construct($id, $nom, $type ,$description, $degats) {
         parent::__construct($id, $nom, $type ,$description);
         $this->degats = $degats;
@@ -37,6 +39,8 @@ class SallePiege extends Salle
 
 class SalleMarchand extends Salle
 {
+    private $objet;
+
     public function __construct($id, $nom, $type ,$description, $objet) {
         parent::__construct($id, $nom, $type ,$description);
         $this->objet = $objet;
