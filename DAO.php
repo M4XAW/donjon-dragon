@@ -8,66 +8,103 @@ class DAO
         $this->db = $db;
     }
 
-    public function choixPersonnage() {
-        echo "\033[2J\033[;H";
 
-        echo "Voici la liste des personnages\n\n";
-        $sql = $this->db->prepare("SELECT * FROM personnages");
-        $sql->execute();
+
+    public function choixPersonnage() {
+        while (true) {
+            echo "\033[2J\033[;H";
+            
+            echo "Voici la liste des personnages\n\n";
+            $sql = $this->db->prepare("SELECT * FROM personnages");
+            $sql->execute();
+            $result = $sql->fetchAll();
+
+            foreach($result as $personnage) {
+                echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
+            }
+
+            if (count($result) == 0) {
+                echo "Aucun personnage\n";
+                return;
+            }
+
+            echo "\n";
+
+            $choix = readline();
+
+            $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
+            $sql->execute([
+                "id" => $choix
+            ]);
+
+            $selectedPersonnage = $sql->fetch();
+
+            if ($selectedPersonnage === false) {
+                echo "\033[2J\033[;H";
+                echo "Personnage introuvable ";
+                sleep(1);
+                continue;
+            }
+
+            break;
+        }
+
+        $this->afficherInfosPersonnage($selectedPersonnage["id"]);
+    }
+
+    public function afficherInventaire($id) {
+        echo "Inventaire : ";
+        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
         $result = $sql->fetchAll();
 
-        foreach($result as $personnage) {
-            echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
+        foreach($result as $item) {
+            echo $item["nom"] . " | ";
         }
 
         if (count($result) == 0) {
-            echo "Aucun personnage\n";
+            echo "Aucun item\n";
         }
-
-        $choix = readline();
-
-        switch($choix) {
-            case 1:
-                $personnage = $this->getPersonnage(1);
-                $this->afficherInfosPersonnage(1);
-                break;
-            case 2:
-                $personnage = $this->getPersonnage(2);
-                $this->afficherInventaire(2);
-                break;
-            case 3:
-                $personnage = $this->getPersonnage(3);
-                $this->afficherInventaire(3);
-                break;
-            default:
-                echo "Ce personnage n'existe pas\n";
-                exit;
-        }
-
-        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
-        $sql->execute([
-            "id" => $choix
-        ]);
-
-        return;
     }
 
-    public function getPersonnage($id) {
+    public function afficherInfosPersonnage($id) {
+        echo "\033[2J\033[;H";
+    
         $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
         $sql->execute([
             "id" => $id
         ]);
+    
         $result = $sql->fetch();
+    
         if ($result === false) {
-            return null;
+            echo "Personnage introuvable.\n";
+            return;
         }
+    
+        echo "👤 " . $result["nom"] . " | ❤️  " . $result["points_de_vie"] . " | 🗡️  " . $result["points_d_attaque"] . " | 🛡️  " . $result["points_de_defense"] . " | 🔥 " . $result["experience"] . " | 🎖️  " . $result["niveau"] . "\n\n";
+        $this->afficherInventaire($id);
+        echo "\n\n";
+    }
 
-        echo "\033[2J\033[;H";
+    public function ajouterObjet($id, $objet) {
+        $sql = $this->db->prepare("INSERT INTO inventaire_personnage (personnage_id, objet_id) VALUES (:personnage_id, :objet_id)");
+        $sql->execute([
+            "personnage_id" => $id,
+            "objet_id" => $objet
+        ]);
+    }
 
-        echo "ID : " . $result["id"] . "\n";
+    public function retirerObjet($id, $objet) {
+        $sql = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnage_id AND objet_id = :objet_id");
+        $sql->execute([
+            "personnage_id" => $id,
+            "objet_id" => $objet
+        ]);
 
-        echo "Vous avez choisi " . $result["nom"] . "\n";
-        return $result;
+        echo "Vous avez déposé l'objet.\n";
     }
 
     // function combat(Personnage $personnage, Monstre $monstre) {
@@ -87,48 +124,60 @@ class DAO
     //     }
     // } 
 
-    public function afficherInventaire($id) {
-        echo "Voici votre inventaire :\n";
-        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
-        $sql->execute([
-            "id" => $id
-        ]);
+    public function randomSalle() {
+        $sql = $this->db->prepare("SELECT * FROM salles");
+        $sql->execute();
         $result = $sql->fetchAll();
+        $random = rand(0, count($result) - 1);
 
-        foreach($result as $item) {
-            echo $item["id"] . ". " . $item["nom"] . "\n";
-        }
-
-        if (count($result) == 0) {
-            echo "Aucun item\n";
-        }
-    }
-    public function afficherInfosPersonnage($id) {
-        echo "\033[2J\033[;H";
-    
-        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
-        $sql->execute([
-            "id" => $id
-        ]);
-    
-        $result = $sql->fetch();
-    
         if ($result === false) {
-            echo "Personnage introuvable.\n";
+            echo "Salle introuvable.\n";
             return;
         }
-    
-        echo "Informations du personnage :\n";
-        echo "Nom : " . $result["nom"] . "\n";
-        echo "Points de vie : " . $result["points_de_vie"] . "\n";
-        echo "Points d'attaque : " . $result["points_d_attaque"] . "\n";
-        echo "Points de défense : " . $result["points_de_defense"] . "\n";
-        echo "Expérience : " . $result["experience"] . "\n";
-        echo "Niveau : " . $result["niveau"] . "\n";
 
-        $this->afficherInventaire($id);
+        echo $result[$random]["description"] . "\n";
+
+        return $result[$random];
     }
-    
 }
+
+$dao = new DAO($db);
+
+while(true) {
+
+    echo "Que voulez-vous faire ?\n";
+    echo "1. Jouer\n";
+    echo "2. Nouvelle partie\n";
+    echo "3. Quitter\n\n";
+
+    $choix = readline();
+
+    echo "\033[2J\033[;H";
+
+    switch($choix) {
+        case 1:
+            $dao->choixPersonnage();
+            $dao->randomSalle();
+
+            // $dao->ajouterObjet(1, 2); // Ajoute une potion au personnage 1
+            // $dao->retirerObjet(1, 2); // Retire une potion au personnage 1
+
+            // $salle = new SallePiege(1, "Salle 1", "Vous êtes dans la salle 1", 10);
+            // $salle2 = new SalleMarchand(2, "Salle 2", "Vous êtes dans la salle 2", "Potion");
+
+            break;
+        case 2:
+            echo "Vous chargez une partie\n";
+            break;
+        case 3:
+            echo "Fermeture du jeu\n";
+            exit;
+        default:
+            echo "Choix invalide ";
+            sleep(1);
+            break;
+    }
+}
+
 
 ?>
