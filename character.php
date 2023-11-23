@@ -3,47 +3,85 @@
 include("config.php");
 include("DAO.php");
 
-class Character 
+class Personnage 
 {
-    public $name;
-    public $health;
-    public $attackPoints;
-    public $defensePoints;
+    public $id;
+    public $nom;
+    public $pointDeVie;
+    public $pointAttaque;
+    public $pointDefense;
     public $experience;
-    public $level;
+    public $niveau;
 
-    public function __construct($name, $health, $attackPoints, $defensePoints) {
-        $this->name = $name;
-        $this->health = $health;
-        $this->attackPoints = $attackPoints;
-        $this->defensePoints = $defensePoints;
-        $this->experience = 0;
-        $this->level = 1;
+    public function __construct($id, $nom, $pointDeVie, $pointAttaque, $pointDefense, $experience, $niveau) {
+        $this->id = $id;
+        $this->nom = $nom;
+        $this->pointDeVie = $pointDeVie;
+        $this->pointAttaque = $pointAttaque;
+        $this->pointDefense = $pointDefense;
+        $this->experience = $experience;
+        $this->niveau = $niveau;
     }
 
-    public function getName() {
-        return $this->name;
+    public function getId() {
+        return $this->id;
     }
 
-    public function getHealth() {
-        return $this->health;
+    public function getNom() {
+        return $this->nom;
     }
 
-    public function getAttackPoints() {
-        return $this->attackPoints;
+    public function getPointDeVie() {
+        return $this->pointDeVie;
     }
 
-    public function getDefensePoints() {
-        return $this->defensePoints;
+    public function getPointAttaque() {
+        return $this->pointAttaque;
+    }
+
+    public function getPointDefense() {
+        return $this->pointDefense;
     }
 
     public function getExperience() {
         return $this->experience;
     }
 
-    public function getLevel() {
-        return $this->level;
+    public function getNiveau() {
+        return $this->niveau;
     }
+}
+
+$dao = new DAO($db);
+
+echo "Que voulez-vous faire ?\n";
+echo "1. Jouer\n";
+echo "2. Charger une partie\n";
+echo "3. Quitter\n\n";
+
+$choix = readline();
+
+//echo "\033[2J\033[;H";
+
+switch($choix) {
+    case 1:
+        $personnage = $dao->choixPersonnage();
+        if ($personnage !== null) {
+            $personnage->afficherInventaire($dao);
+        } else {
+            echo "Personnage non défini.\n";
+        }
+        break;
+        break;
+    case 2:
+        echo "Vous chargez une partie\n";
+        break;
+    case 3:
+        echo "Vous quittez le jeu\n";
+        break;
+    default:
+        echo "Choix invalide\n";
+        break;
 }
 
 ?>

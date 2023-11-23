@@ -30,11 +30,12 @@ class Salle {
     }
 }
 
-class SallePiege extends Salle {
+class SallePiege extends Salle
+{
     private $degats;
 
-    public function __construct($id, $nom, $type, $description, $degats) {
-        parent::__construct($id, $nom, $type, $description);
+    public function __construct($id, $nom, $type ,$description, $degats) {
+        parent::__construct($id, $nom, $type ,$description);
         $this->degats = $degats;
     }
 
