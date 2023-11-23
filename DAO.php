@@ -28,12 +28,16 @@ class DAO
 
         switch($choix) {
             case 1:
+                $personnage = $this->getPersonnage(1);
+                $this->afficherInventaire(1);
                 break;
             case 2:
                 $personnage = $this->getPersonnage(2);
+                $this->afficherInventaire(2);
                 break;
             case 3:
                 $personnage = $this->getPersonnage(3);
+                $this->afficherInventaire(3);
                 break;
             case 4:
                 $personnage = $this->getPersonnage(4);
