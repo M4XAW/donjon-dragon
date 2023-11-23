@@ -28,7 +28,6 @@ class DAO
 
         switch($choix) {
             case 1:
-                $personnage = $this->getPersonnage(1);
                 break;
             case 2:
                 $personnage = $this->getPersonnage(2);
@@ -52,9 +51,7 @@ class DAO
         $sql->execute([
             "id" => $id
         ]);
-    
-        $result = $sql->fetch(PDO::FETCH_CLASS, 'Personnage', array());
-    
+        $result = $sql->fetch();
         if ($result === false) {
             return null;
         }
@@ -68,7 +65,7 @@ class DAO
     }
 
     function combat(Personnage $personnage, Monstre $monstre) {
-        while ($personnage->pointDeVie > 0 && $monstre->pointDeVie > 0) {
+        while ($personnage->getPointDeVie() > 0 && $monstre->getPointDeVie() > 0) {
             $degats = $personnage->PA - $monstre->PD;
             if ($degats > 0) {
                 $monstre->pointDeVie -= $degats;
@@ -84,42 +81,23 @@ class DAO
         }
     } 
 
-    public function afficherInventairePersonnage($personnageId) {
-        $sql = $this->db->prepare("
-            SELECT p.id, p.nom AS nom_personnage, o.nom AS nom_objet
-            FROM personnages p
-            LEFT JOIN inventaire_personnage ip ON p.id = ip.personnage_id
-            LEFT JOIN objet o ON ip.objet_id = o.id
-            WHERE p.id = :id
-        ");
+    public function afficherInventaire($id) {
+        echo "\033[2J\033[;H";
+    
+        echo "Voici votre inventaire :\n";
+        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
         $sql->execute([
-            "id" => $personnageId
+            "id" => $id
         ]);
-        return $sql->fetchAll();
-    }
-
-    public function afficherInventaire(Personnage $personnage) {
-        echo "Inventaire de " . $personnage->getNom() . " :\n";
-        $sql = $this->db->prepare("
-            SELECT p.id, p.nom AS nom_personnage, o.nom AS nom_objet
-            FROM personnages p
-            LEFT JOIN inventaire_personnage ip ON p.id = ip.personnage_id
-            LEFT JOIN objet o ON ip.objet_id = o.id
-            WHERE p.id = :id
-        ");
-        $sql->execute([
-            "id" => $personnageId
-        ]);
-        $inventaire = $sql->fetchAll();
-
-
-        if (count($inventaire) > 0) {
-            foreach ($inventaire as $objet) {
-                echo "- " . $objet["nom"] . "\n";
-            }
-        } else {
-            echo "L'inventaire est vide.\n";
+        $result = $sql->fetchAll();
+    
+        foreach($result as $item) {
+            echo $item["id"] . ". " . $item["nom"] . "\n";
         }
-    }
+    
+        if (count($result) == 0) {
+            echo "Aucun item\n";
+        }
+    }       
 }
 ?>
