@@ -55,9 +55,30 @@ class DAO
         $result = $sql->fetch();
         echo "\033[2J\033[;H";
 
+        echo "ID : " . $result["id"] . "\n";
+
         echo "Vous avez choisi " . $result["nom"] . "\n";
         return $result;
     }
+
+    function combat(Personnage $personnage, Monstre $monstre) {
+        while ($personnage->pointDeVie > 0 && $monstre->pointDeVie > 0) {
+            $degats = $personnage->PA - $monstre->PD;
+            if ($degats > 0) {
+                $monstre->pointDeVie -= $degats;
+            } else {
+                $personnage->pointDeVie -= $monstre->PA - $personnage->PD;
+            }
+        }
+        if ($personnage->pointDeVie > 0) {
+            $personnage->experience += $monstre->experience;
+            echo "Vous avez gagné le combat.\n";
+        } else {
+            echo "Vous avez perdu le combat.\n";
+        }
+    } 
+
+    
 }
 
 ?>

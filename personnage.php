@@ -60,6 +60,10 @@ echo "\033[2J\033[;H";
 switch($choix) {
     case 1:
         $dao->choixPersonnage();
+
+        // $salle = new SallePiege(1, "Salle 1", "Vous êtes dans la salle 1", 10);
+        // $salle2 = new SalleMarchand(2, "Salle 2", "Vous êtes dans la salle 2", "Potion");
+
         break;
     case 2:
         echo "Vous chargez une partie\n";
