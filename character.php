@@ -5,6 +5,7 @@ include("DAO.php");
 
 class Personnage 
 {
+    public $id;
     public $nom;
     public $pointDeVie;
     public $pointAttaque;
@@ -12,13 +13,18 @@ class Personnage
     public $experience;
     public $niveau;
 
-    public function __construct($nom, $pointDeVie, $pointAttaque, $pointDefense, $experience, $niveau) {
+    public function __construct($id, $nom, $pointDeVie, $pointAttaque, $pointDefense, $experience, $niveau) {
+        $this->id = $id;
         $this->nom = $nom;
         $this->pointDeVie = $pointDeVie;
         $this->pointAttaque = $pointAttaque;
         $this->pointDefense = $pointDefense;
         $this->experience = $experience;
         $this->niveau = $niveau;
+    }
+
+    public function getId() {
+        return $this->id;
     }
 
     public function getNom() {
@@ -55,15 +61,17 @@ echo "3. Quitter\n\n";
 
 $choix = readline();
 
-echo "\033[2J\033[;H";
+//echo "\033[2J\033[;H";
 
 switch($choix) {
     case 1:
-        $dao->choixPersonnage();
-
-        // $salle = new SallePiege(1, "Salle 1", "Vous êtes dans la salle 1", 10);
-        // $salle2 = new SalleMarchand(2, "Salle 2", "Vous êtes dans la salle 2", "Potion");
-        
+        $personnage = $dao->choixPersonnage();
+        if ($personnage !== null) {
+            $personnage->afficherInventaire($dao);
+        } else {
+            echo "Personnage non défini.\n";
+        }
+        break;
         break;
     case 2:
         echo "Vous chargez une partie\n";

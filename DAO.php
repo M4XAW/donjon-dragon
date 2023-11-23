@@ -52,7 +52,13 @@ class DAO
         $sql->execute([
             "id" => $id
         ]);
-        $result = $sql->fetch();
+    
+        $result = $sql->fetch(PDO::FETCH_CLASS, 'Personnage', array());
+    
+        if ($result === false) {
+            return null;
+        }
+    
         echo "\033[2J\033[;H";
 
         echo "ID : " . $result["id"] . "\n";
@@ -78,7 +84,42 @@ class DAO
         }
     } 
 
-    
-}
+    public function afficherInventairePersonnage($personnageId) {
+        $sql = $this->db->prepare("
+            SELECT p.id, p.nom AS nom_personnage, o.nom AS nom_objet
+            FROM personnages p
+            LEFT JOIN inventaire_personnage ip ON p.id = ip.personnage_id
+            LEFT JOIN objet o ON ip.objet_id = o.id
+            WHERE p.id = :id
+        ");
+        $sql->execute([
+            "id" => $personnageId
+        ]);
+        return $sql->fetchAll();
+    }
 
+    public function afficherInventaire(Personnage $personnage) {
+        echo "Inventaire de " . $personnage->getNom() . " :\n";
+        $sql = $this->db->prepare("
+            SELECT p.id, p.nom AS nom_personnage, o.nom AS nom_objet
+            FROM personnages p
+            LEFT JOIN inventaire_personnage ip ON p.id = ip.personnage_id
+            LEFT JOIN objet o ON ip.objet_id = o.id
+            WHERE p.id = :id
+        ");
+        $sql->execute([
+            "id" => $personnageId
+        ]);
+        $inventaire = $sql->fetchAll();
+
+
+        if (count($inventaire) > 0) {
+            foreach ($inventaire as $objet) {
+                echo "- " . $objet["nom"] . "\n";
+            }
+        } else {
+            echo "L'inventaire est vide.\n";
+        }
+    }
+}
 ?>

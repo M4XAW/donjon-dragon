@@ -6,13 +6,12 @@ class Arme
     public $degats;
     public $niveauRequie;
 
-    public function __construct($nom, $degats, $levelRequie) {
+    public function __construct($nom, $degats, $niveauRequie) {
         $this->nom = $nom;
         $this->degats = $degats;
-        $this->levelRequie = $levelRequie;
+        $this->niveauRequie = $niveauRequie;
     }
 
 
 }
-
 ?>
