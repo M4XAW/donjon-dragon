@@ -20,6 +20,30 @@ class Character
         $this->experience = 0;
         $this->level = 1;
     }
+
+    public function getName() {
+        return $this->name;
+    }
+
+    public function getHealth() {
+        return $this->health;
+    }
+
+    public function getAttackPoints() {
+        return $this->attackPoints;
+    }
+
+    public function getDefensePoints() {
+        return $this->defensePoints;
+    }
+
+    public function getExperience() {
+        return $this->experience;
+    }
+
+    public function getLevel() {
+        return $this->level;
+    }
 }
 
 ?>
