@@ -41,30 +41,33 @@ LOCK TABLES `armes` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `butin`
+-- Table structure for table `inventaire_personnage`
 --
 
-DROP TABLE IF EXISTS `butin`;
+DROP TABLE IF EXISTS `inventaire_personnage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `butin` (
+CREATE TABLE `inventaire_personnage` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `nom` varchar(255) NOT NULL,
-  `type` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `bonus` int(11) DEFAULT NULL,
-  `malus` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `personnage_id` int(11) DEFAULT NULL,
+  `objet_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `personnage_id` (`personnage_id`),
+  KEY `objet_id` (`objet_id`),
+  CONSTRAINT `inventaire_personnage_ibfk_1` FOREIGN KEY (`personnage_id`) REFERENCES `personnages` (`id`),
+  CONSTRAINT `inventaire_personnage_ibfk_2` FOREIGN KEY (`objet_id`) REFERENCES `objet` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `butin`
+-- Dumping data for table `inventaire_personnage`
 --
 
-LOCK TABLES `butin` WRITE;
-/*!40000 ALTER TABLE `butin` DISABLE KEYS */;
-/*!40000 ALTER TABLE `butin` ENABLE KEYS */;
+LOCK TABLES `inventaire_personnage` WRITE;
+/*!40000 ALTER TABLE `inventaire_personnage` DISABLE KEYS */;
+INSERT INTO `inventaire_personnage` VALUES
+(1,1,1);
+/*!40000 ALTER TABLE `inventaire_personnage` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -99,6 +102,37 @@ LOCK TABLES `monstres` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `objet`
+--
+
+DROP TABLE IF EXISTS `objet`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `objet` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `bonus` int(11) DEFAULT NULL,
+  `malus` int(11) DEFAULT NULL,
+  `degats` int(11) DEFAULT NULL,
+  `defense` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `objet`
+--
+
+LOCK TABLES `objet` WRITE;
+/*!40000 ALTER TABLE `objet` DISABLE KEYS */;
+INSERT INTO `objet` VALUES
+(1,'Hache','Arme','Une puissante hache tranchante',NULL,NULL,10,NULL);
+/*!40000 ALTER TABLE `objet` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `personnages`
 --
 
@@ -113,11 +147,10 @@ CREATE TABLE `personnages` (
   `points_de_defense` int(11) NOT NULL,
   `experience` int(11) NOT NULL,
   `niveau` int(11) NOT NULL,
-  `nom_arme` varchar(255) DEFAULT NULL,
   `niveau_arme_requis` int(11) DEFAULT NULL,
-  `cree_le` timestamp NULL DEFAULT current_timestamp(),
+  `inventaire` text DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -126,6 +159,10 @@ CREATE TABLE `personnages` (
 
 LOCK TABLES `personnages` WRITE;
 /*!40000 ALTER TABLE `personnages` DISABLE KEYS */;
+INSERT INTO `personnages` VALUES
+(1,'Draven',100,20,10,0,1,1,'[1]'),
+(2,'Darius',120,18,12,0,1,1,'[\"Hache\"]'),
+(3,'Garen',90,15,15,0,1,1,'[\"Épée\"]');
 /*!40000 ALTER TABLE `personnages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -163,4 +200,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-11-23 11:11:54
+-- Dump completed on 2023-11-23 14:23:15
