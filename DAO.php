@@ -1,46 +1,52 @@
-<?php 
+<?php
 
-class DAO 
+class DAO
 {
     public $db;
 
-    public function __construct($db) {
+    public function __construct($db)
+    {
         $this->db = $db;
     }
 
-
-
-    public function choixPersonnage() {
+    public function choixPersonnage()
+    {
         while (true) {
             echo "\033[2J\033[;H";
-            
+
             echo "Voici la liste des personnages\n\n";
             $sql = $this->db->prepare("SELECT * FROM personnages");
             $sql->execute();
             $result = $sql->fetchAll();
 
-            foreach($result as $personnage) {
+            foreach ($result as $personnage) {
                 echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
             }
 
             if (count($result) == 0) {
                 echo "Aucun personnage\n";
-                return;
             }
 
             echo "\n";
 
             $choix = readline();
 
-            $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
-            $sql->execute([
-                "id" => $choix
-            ]);
-
-            $selectedPersonnage = $sql->fetch();
-
-            if ($selectedPersonnage === false) {
-                echo "\033[2J\033[;H";
+            if ($choix == 1) {
+                $personnage = $this->getPersonnage(1);
+                $salleId = $this->choisirSalleAleatoire();
+                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+                $this->afficherInfosSalle($salleId, $personnage['id']);
+            } else if ($choix == 2) {
+                $personnage = $this->getPersonnage(2);
+                $salleId = $this->choisirSalleAleatoire();
+                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+                $this->afficherInfosSalle($salleId, $personnage['id']);
+            } else if ($choix == 3) {
+                $personnage = $this->getPersonnage(3);
+                $salleId = $this->choisirSalleAleatoire();
+                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+                $this->afficherInfosSalle($salleId, $personnage['id']);
+            } else {
                 echo "Personnage introuvable ";
                 sleep(1);
                 continue;
@@ -48,63 +54,28 @@ class DAO
 
             break;
         }
-
-        $this->afficherInfosPersonnage($selectedPersonnage["id"]);
     }
 
-    public function afficherInventaire($id) {
-        echo "Inventaire : ";
-        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
-        $sql->execute([
-            "id" => $id
-        ]);
-        $result = $sql->fetchAll();
 
-        foreach($result as $item) {
-            echo $item["nom"] . " | ";
-        }
-
-        if (count($result) == 0) {
-            echo "Aucun item\n";
-        }
-    }
-
-    public function afficherInfosPersonnage($id) {
-        echo "\033[2J\033[;H";
-    
+    public function getPersonnage($id)
+    {
         $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
         $sql->execute([
             "id" => $id
         ]);
-    
         $result = $sql->fetch();
-    
-        if ($result === false) {
-            echo "Personnage introuvable.\n";
-            return;
-        }
-    
-        echo "👤 " . $result["nom"] . " | ❤️  " . $result["points_de_vie"] . " | 🗡️  " . $result["points_d_attaque"] . " | 🛡️  " . $result["points_de_defense"] . " | 🔥 " . $result["experience"] . " | 🎖️  " . $result["niveau"] . "\n\n";
-        $this->afficherInventaire($id);
-        echo "\n\n";
+
+        return $result;
     }
-
-    public function ajouterObjet($id, $objet) {
-        $sql = $this->db->prepare("INSERT INTO inventaire_personnage (personnage_id, objet_id) VALUES (:personnage_id, :objet_id)");
+    private function getMonstre($monstreId)
+    {
+        $sql = $this->db->prepare("SELECT * FROM monstres WHERE id = :monstreId");
         $sql->execute([
-            "personnage_id" => $id,
-            "objet_id" => $objet
+            "monstreId" => $monstreId,
         ]);
-    }
+        $monstre = $sql->fetch();
 
-    public function retirerObjet($id, $objet) {
-        $sql = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnage_id AND objet_id = :objet_id");
-        $sql->execute([
-            "personnage_id" => $id,
-            "objet_id" => $objet
-        ]);
-
-        echo "Vous avez déposé l'objet.\n";
+        return $monstre;
     }
 
     // function combat(Personnage $personnage, Monstre $monstre) {
@@ -124,60 +95,246 @@ class DAO
     //     }
     // } 
 
-    public function randomSalle() {
-        $sql = $this->db->prepare("SELECT * FROM salles");
-        $sql->execute();
+    public function afficherInventaire($id)
+    {
+        echo "Inventaire : ";
+        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
         $result = $sql->fetchAll();
-        $random = rand(0, count($result) - 1);
+
+        foreach ($result as $item) {
+            echo $item["nom"] . " | ";
+        }
+
+        if (count($result) == 0) {
+            echo "Aucun item\n";
+        }
+    }
+
+    public function afficherInfosPersonnage($id)
+    {
+        echo "\033[2J\033[;H";
+
+        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
+
+        $result = $sql->fetch();
+
+        if ($result === false) {
+            echo "Personnage introuvable.\n";
+            return;
+        }
+
+        echo "👤 " . $result["nom"] . " | ❤️  " . $result["points_de_vie"] . " | 🗡️  " . $result["points_d_attaque"] . " | 🛡️  " . $result["points_de_defense"] . " | 🔥 " . $result["experience"] . " | 🎖️  " . $result["niveau"] . "\n\n";
+        $this->afficherInventaire($id);
+        echo "\n\n";
+    }
+
+    private function choisirSalleAleatoire()
+    {
+        $sql = $this->db->prepare("SELECT id FROM salles ORDER BY RAND() LIMIT 1");
+        $sql->execute();
+        $result = $sql->fetch();
+
+        return $result['id'];
+    }
+
+    private function mettreAJourSalleActuelle($personnageId, $salleId)
+    {
+        $sql = $this->db->prepare("UPDATE personnages SET salle_actuelle = :salleId WHERE id = :personnageId");
+        $sql->execute([
+            "salleId" => $salleId,
+            "personnageId" => $personnageId,
+        ]);
+    }
+    private function afficherInfosSalle($salleId, $personnageId)
+    {
+        $sql = $this->db->prepare("SELECT * FROM salles WHERE id = :salleId");
+        $sql->execute([
+            "salleId" => $salleId,
+        ]);
+        $result = $sql->fetch();
 
         if ($result === false) {
             echo "Salle introuvable.\n";
             return;
         }
 
-        echo $result[$random]["description"] . "\n";
+        echo "\033[2J\033[;H";
 
-        return $result[$random];
+        echo "Informations de la salle :\n";
+        echo "Nom : " . $result["nom"] . "\n";
+        echo "Description : " . $result["description"] . "\n\n";
+
+        switch ($result["type"]) {
+            case "Monstre":
+                $monstreId = $this->getMonstreId($salleId);
+                $this->gestionCombat($personnageId, $result["monstre_id"]);
+                break;
+            case "Marchand":
+                $this->afficherOptionsMarchand($personnageId, $result["id"]);
+                break;
+            case "Piège":
+                $this->appliquerEffetPiege($personnageId);
+                break;
+            case "Questions":
+                $this->afficherQuestion($result["id"]);
+                break;
+            default:
+                echo "Type de salle non reconnu.\n";
+                break;
+        }
     }
+    private function getMonstreId($salleId)
+    {
+        $sql = $this->db->prepare("SELECT monstre_id FROM salles WHERE id = :salleId");
+        $sql->execute([
+            "salleId" => $salleId,
+        ]);
+        $result = $sql->fetch();
+
+        return $result ? $result['monstre_id'] : null;
+    }
+    private function afficherOptionsMarchand($personnageId, $salleId)
+    {
+        echo "Vous entrez dans la salle d'un marchand !\n";
+
+    }
+
+    private function afficherQuestion($salleId)
+    {
+        echo "Vous entrez dans une salle de questions !\n";
+
+    }
+
+    private function appliquerEffetPiege($personnageId)
+    {
+        echo "Vous entrez dans une salle de piège !\n";
+        echo "Vous perdez 10 points de vie !\n";
+
+        $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - 10 WHERE id = :personnageId");
+        $sql->execute([
+            "personnageId" => $personnageId,
+        ]);
+    }
+
+    private function gestionCombat($personnageId, $monstreId)
+    {
+        echo "Vous entrez en combat avec un monstre !\n\n";
+        sleep(2);
+        
+        $personnage = $this->getPersonnage($personnageId);
+
+        $sql = $this->db->prepare("SELECT * FROM monstres WHERE id = :monstreId");
+        $sql->execute([
+            "monstreId" => $monstreId,
+        ]);
+        $monstre = $sql->fetch();
+
+        while ($personnage['points_de_vie'] > 0 && $monstre['points_de_vie'] > 0) {
+            echo "\033[2J\033[;H";
+            
+            $this->afficherInfosPersonnage($personnageId);
+
+            echo "Options de combat:\n";
+            echo "1. Attaquer\n";
+            echo "2. Se défendre\n\n";
+
+            $choixCombat = readline();
+
+            switch ($choixCombat) {
+                case 1:
+                    $degatsJoueur = max(0, $personnage['points_d_attaque']);
+                    $sql = $this->db->prepare("UPDATE monstres SET points_de_vie = points_de_vie - :degats WHERE id = :monstreId");
+                    $sql->execute([
+                        "degats" => $degatsJoueur,
+                        "monstreId" => $monstreId,
+                    ]);
+
+                    echo "\033[2J\033[;H";
+
+                    echo "Vous avez infligé $degatsJoueur points de dégâts au monstre!\n";
+                    break;
+                case 2:
+                    $degatsMonstre = max(0, $monstre['points_d_attaque'] - $personnage['points_de_defense']);
+                    $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - :degats WHERE id = :personnageId");
+                    $sql->execute([
+                        "degats" => $degatsMonstre,
+                        "personnageId" => $personnageId,
+                    ]);
+
+                    echo "Vous avez subi $degatsMonstre points de dégâts!\n";
+                    break;
+                default:
+                    echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
+            }
+
+            $personnage = $this->getPersonnage($personnageId);
+            $monstre = $this->getMonstre($monstreId);
+
+            if ($monstre['points_de_vie'] > 0) {
+                $degatsMonstre = max(0, $monstre['points_d_attaque']);
+
+                $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - :degats WHERE id = :personnageId");
+                $sql->execute([
+                    "degats" => $degatsMonstre,
+                    "personnageId" => $personnageId,
+                ]);
+
+                $personnage = $this->getPersonnage($personnageId);
+                echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
+            } else {
+                $sql = $this->db->prepare("UPDATE personnages SET experience = experience + :experience WHERE id = :personnageId");
+                $sql->execute([
+                    "experience" => $monstre['experience'],
+                    "personnageId" => $personnageId,
+                ]);
+
+                echo "Vous avez vaincu le monstre!\n";
+
+                $personnage = $this->getPersonnage($personnageId);
+                echo "Vous avez gagné " . $monstre['experience'] . " points d'expérience!\n";
+            }
+
+            if ($personnage['points_de_vie'] < 0) {
+                echo "Vous avez été vaincu par le monstre!\n";
+            }
+            
+            sleep(3);
+        }
+    }
+
 }
 
 $dao = new DAO($db);
 
-while(true) {
+echo "Que voulez-vous faire ?\n";
+echo "1. Jouer\n";
+echo "2. Nouvelle partie\n";
+echo "3. Quitter\n\n";
 
-    echo "Que voulez-vous faire ?\n";
-    echo "1. Jouer\n";
-    echo "2. Nouvelle partie\n";
-    echo "3. Quitter\n\n";
+$choix = readline();
 
-    $choix = readline();
+echo "\033[2J\033[;H";
 
-    echo "\033[2J\033[;H";
-
-    switch($choix) {
-        case 1:
-            $dao->choixPersonnage();
-            $dao->randomSalle();
-
-            // $dao->ajouterObjet(1, 2); // Ajoute une potion au personnage 1
-            // $dao->retirerObjet(1, 2); // Retire une potion au personnage 1
-
-            // $salle = new SallePiege(1, "Salle 1", "Vous êtes dans la salle 1", 10);
-            // $salle2 = new SalleMarchand(2, "Salle 2", "Vous êtes dans la salle 2", "Potion");
-
-            break;
-        case 2:
-            echo "Vous chargez une partie\n";
-            break;
-        case 3:
-            echo "Fermeture du jeu\n";
-            exit;
-        default:
-            echo "Choix invalide ";
-            sleep(1);
-            break;
-    }
+switch ($choix) {
+    case 1:
+        $dao->choixPersonnage();
+        break;
+    case 2:
+        echo "Vous chargez une partie\n";
+        break;
+    case 3:
+        echo "Fermeture du jeu\n";
+        exit;
+    default:
+        echo "Choix invalide ";
+        sleep(1);
+        break;
 }
-
 
 ?>
