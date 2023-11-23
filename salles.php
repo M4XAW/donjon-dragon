@@ -1,5 +1,5 @@
 <?php
-class salles 
+class Salle 
 {
     private $id;
     private $nom;
@@ -24,5 +24,21 @@ class salles
     }
     public function getDescription(){
         return $this->description;
+    }
+}
+
+class SallePiege extends Salle
+{
+    public function __construct($id, $nom, $type ,$description, $degats) {
+        parent::__construct($id, $nom, $type ,$description);
+        $this->degats = $degats;
+    }
+}
+
+class SalleMarchand extends Salle
+{
+    public function __construct($id, $nom, $type ,$description, $objet) {
+        parent::__construct($id, $nom, $type ,$description);
+        $this->objet = $objet;
     }
 }

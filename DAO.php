@@ -26,9 +26,35 @@ class DAO
 
         $choix = readline();
 
-        switch($choix) 
+        switch($choix) {
+            case 1:
+                $personnage = $this->getPersonnage(1);
+                break;
+            case 2:
+                $personnage = $this->getPersonnage(2);
+                break;
+            case 3:
+                $personnage = $this->getPersonnage(3);
+                break;
+            case 4:
+                $personnage = $this->getPersonnage(4);
+                break;
+            default:
+                echo "Ce personnage n'existe pas\n";
+                exit;
+        }
 
         return $personnage;
+    }
+
+    public function getPersonnage($id) {
+        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
+        $result = $sql->fetch();
+        echo "Vous avez choisi " . $result["nom"] . "\n";
+        return $result;
     }
 }
 
