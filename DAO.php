@@ -1,8 +1,7 @@
-<?php 
-
+<?php
 class DAO 
 {
-    public $db;
+    private $db;
 
     public function __construct($db) {
         $this->db = $db;
@@ -14,10 +13,10 @@ class DAO
         echo "Voici la liste des personnages\n\n";
         $sql = $this->db->prepare("SELECT * FROM personnages");
         $sql->execute();
-        $result = $sql->fetchAll();
+        $result = $sql->fetchAll(PDO::FETCH_CLASS, 'Personnage', array());
 
         foreach($result as $personnage) {
-            echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
+            echo $personnage->getId() . ". " . $personnage->getNom() . "\n";
         }
 
         if (count($result) == 0) {
@@ -26,71 +25,44 @@ class DAO
 
         $choix = readline();
 
-        switch($choix) {
-            case 1:
-                $personnage = $this->getPersonnage(1);
-                break;
-            case 2:
-                $personnage = $this->getPersonnage(2);
-                break;
-            case 3:
-                $personnage = $this->getPersonnage(3);
-                break;
-            case 4:
-                $personnage = $this->getPersonnage(4);
-                break;
-            default:
-                echo "Ce personnage n'existe pas\n";
-                exit;
+        foreach($result as $personnage) {
+            if ($personnage->getId() == $choix) {
+                echo "\033[2J\033[;H";
+                echo "Vous avez choisi " . $personnage->getNom() . "\n";
+                $personnage->afficherInventaire($this);
+                return $personnage;
+            }
         }
 
-        return $personnage;
-    }
-
-    public function getPersonnage($id) {
-        $sql = $this->db->prepare("SELECT * FROM personnages WHERE id = :id");
-        $sql->execute([
-            "id" => $id
-        ]);
-    
-        $result = $sql->fetch(PDO::FETCH_CLASS, 'Personnage', array());
-    
-        if ($result === false) {
-            return null;
-        }
-    
-        echo "\033[2J\033[;H";
-        echo "Vous avez choisi " . $result->getNom() . "\n";
-    
-        return $result;
+        echo "Ce personnage n'existe pas\n";
+        exit;
     }
     
-    public function afficherInventairePersonnage($personnageId) {
-        $sql = $this->db->prepare("
-            SELECT p.id, p.nom AS nom_personnage, o.nom AS nom_objet
-            FROM personnages p
-            LEFT JOIN inventaire_personnage ip ON p.id = ip.personnage_id
-            LEFT JOIN objet o ON ip.objet_id = o.id
-            WHERE p.id = :id
-        ");
-        $sql->execute([
-            "id" => $personnageId
-        ]);
-        return $sql->fetchAll();
-    }
     
 
     public function afficherInventaire(Personnage $personnage) {
+        $query = "
+            SELECT o.nom AS nom_objet
+            FROM inventaire_personnage ip
+            JOIN objet o ON ip.objet_id = o.id
+            WHERE ip.personnage_id = {$personnage->getId()}
+        ";
+
+        $result = mysqli_query($this->db, $query);
+        $inventaire = [];
+
+        while ($row = mysqli_fetch_assoc($result)) {
+            $inventaire[] = $row['nom_objet'];
+        }
+
         echo "Inventaire de " . $personnage->getNom() . " :\n";
-        $inventaire = $this->afficherInventairePersonnage($personnage->getId());
 
         if (count($inventaire) > 0) {
             foreach ($inventaire as $objet) {
-                echo "- " . $objet["nom"] . "\n";
+                echo "- $objet\n";
             }
         } else {
             echo "L'inventaire est vide.\n";
         }
     }
 }
-?>

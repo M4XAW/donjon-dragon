@@ -61,7 +61,7 @@ echo "3. Quitter\n\n";
 
 $choix = readline();
 
-//echo "\033[2J\033[;H";
+echo "\033[2J\033[;H";
 
 switch($choix) {
     case 1:
