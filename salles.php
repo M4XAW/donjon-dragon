@@ -1,5 +1,6 @@
 <?php
-class salles {
+class salles 
+{
     private $id;
     private $nom;
     private $type;
@@ -24,4 +25,4 @@ class salles {
     public function getDescription(){
         return $this->description;
     }
-    }
+}

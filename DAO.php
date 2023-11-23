@@ -26,9 +26,7 @@ class DAO
 
         $choix = readline();
 
-        switch($choix) {
-            case 1:
-        }
+        switch($choix) 
 
         return $personnage;
     }

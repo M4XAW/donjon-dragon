@@ -1,10 +1,10 @@
 <?php 
 
-class Weapon 
+class Arme
 {
     public $nom;
     public $degats;
-    public $levelRequie;
+    public $niveauRequie;
 
     public function __construct($nom, $degats, $levelRequie) {
         $this->nom = $nom;
@@ -12,7 +12,7 @@ class Weapon
         $this->levelRequie = $levelRequie;
     }
 
-    
+
 }
 
 ?>
