@@ -361,8 +361,6 @@ class DAO
 
 $dao = new DAO($db);
 
-$dao->verificationPlaceInventaire(1);
-
 echo "Que voulez-vous faire ?\n";
 echo "1. Jouer\n";
 echo "2. Nouvelle partie\n";
