@@ -71,7 +71,6 @@ class DAO
                 $salleId = $this->choisirSalleAleatoire();
                 $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
                 $this->afficherInfosSalle($salleId, $personnage['id']);
-                $personnageId = $choix;
             } else if ($choix == 2) {
                 $personnage = $this->getPersonnage(2);
                 $salleId = $this->choisirSalleAleatoire();
