@@ -399,20 +399,23 @@ class DAO
                             "personnageId" => $personnageId
                         ]);
                         $arme = $sqlArme->fetch();
-                        $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
-
+                    
+                        if ($arme) {
+                            $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
+                        } else {
+                            $degatsJoueur = max(0, $personnage['points_d_attaque']);
+                        }
                         $this->infligerDegatsMonstre($monstreId, $degatsJoueur);
-                                        
-                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre ! ";
-
+                
+                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre! \n";
                         sleep(2);
-
+            
                         $degatsMonstre = max(0, $monstre['points_d_attaque']);
-
-                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
-
-                        sleep(2);
         
+                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
+                    
+                        sleep(2);
+ 
                         echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
                         break;
                     case 2:
