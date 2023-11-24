@@ -45,52 +45,46 @@ class DAO
     }
 
     public function choixPersonnage()
-    {
-        while(true) {
-            echo "\033[2J\033[;H";
+{
+    while (true) {
+        echo "\033[2J\033[;H";
 
-            echo "Voici la liste des personnages\n\n";
-            $sql = $this->db->prepare("SELECT * FROM personnages");
-            $sql->execute();
-            $result = $sql->fetchAll();
+        echo "Voici la liste des personnages\n\n";
+        $sql = $this->db->prepare("SELECT * FROM personnages");
+        $sql->execute();
+        $result = $sql->fetchAll();
 
-            foreach ($result as $personnage) {
-                echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
-            }
-
-            if (count($result) == 0) {
-                echo "Aucun personnage\n";
-            }
-
-            echo "\n";
-
-            $choix = readline();
-
-            if ($choix == 1) {
-                $personnage = $this->getPersonnage(1);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-                $personnageId = $choix;
-            } else if ($choix == 2) {
-                $personnage = $this->getPersonnage(2);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-            } else if ($choix == 3) {
-                $personnage = $this->getPersonnage(3);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-            } else {
-                echo "Personnage introuvable ";
-                sleep(1);
-                continue;
-            }
-
-            break;
+        foreach ($result as $personnage) {
+            echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
         }
+
+        if (count($result) == 0) {
+            echo "Aucun personnage\n";
+        }
+
+        echo "\n";
+
+        $choix = readline();
+
+        if ($choix == 1 || $choix == 2 || $choix == 3) {
+            $personnage = $this->getPersonnage($choix);
+            $personnageId = $choix;
+
+            while ($personnage['points_de_vie'] > 0) {
+                $salleId = $this->choisirSalleAleatoire();
+                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+                $this->afficherInfosSalle($salleId, $personnage['id']);
+            }
+        } else {
+            echo "Personnage introuvable ";
+            sleep(1);
+            continue;
+        }
+
+        break;
     }
+}
+
 
 
     public function getPersonnage($id)
@@ -245,84 +239,86 @@ class DAO
     }
 
     private function afficherQuestion($salleId, $personnageId)
-{
-    $sql = $this->db->prepare("SELECT q.id, q.question, q.reponse FROM enigmes q JOIN salles s ON q.id = s.enigme_id WHERE s.id = :salleId ORDER BY RAND()");
-    $sql->execute([
-        "salleId" => $salleId,
-    ]);
-    $enigme = $sql->fetch();
+    {
+        $sql = $this->db->prepare("SELECT q.id, q.question, q.reponse FROM enigmes q JOIN salles s ON q.id = s.enigme_id WHERE s.id = :salleId ORDER BY RAND()");
+        $sql->execute([
+            "salleId" => $salleId,
+        ]);
+        $enigme = $sql->fetch();
 
-    if ($enigme === false) {
-        echo "Erreur : Enigme non trouvée pour cette salle.\n";
-        return;
-    }
+        if ($enigme === false) {
+            echo "Erreur : Enigme non trouvée pour cette salle.\n";
+            return;
+        }
 
-    echo "Vous entrez dans une salle de questions !\n";
-    echo "Question : {$enigme['question']}\n";
+        echo "Vous entrez dans une salle de questions !\n";
+        echo "Question : {$enigme['question']}\n";
 
-    $reponseUtilisateur = strtolower(readline("Votre réponse : "));
+        $reponseUtilisateur = strtolower(readline("Votre réponse : "));
 
-    if ($reponseUtilisateur === strtolower($enigme['reponse'])) {
-        echo "Félicitations, votre réponse est correcte!\n";
+        if ($reponseUtilisateur === strtolower($enigme['reponse'])) {
+            echo "Félicitations, votre réponse est correcte!\n";
 
-        $objet = $this->ObjetAleatoire();
-        $nomObjet = $objet['nom'];
-        echo "Vous avez obtenu un nouvel objet : $nomObjet!\n";
-        if ($objet['type'] === 'Arme') {
-            $armeExistante = $this->getArmeDansInventaire($personnageId);
-            
-            if ($armeExistante) {
-                echo "Vous avez déjà une arme dans votre inventaire : {$armeExistante['nom']}.\n";
-                $choixEchange = strtolower(readline("Voulez-vous échanger votre arme actuelle avec la nouvelle ? (oui/non) : "));
+            $objet = $this->objetAleatoire();
+            $nomObjet = $objet['nom'];
+            echo "Vous avez obtenu un nouvel objet : $nomObjet!\n";
+            // Si l'objet est de type arme
+            if ($objet['type'] === 'Arme') {
+                $armeExistante = $this->getArmeDansInventaire($personnageId);
+                
+                if ($armeExistante) {
+                    echo "Vous avez déjà une arme dans votre inventaire : {$armeExistante['nom']}.\n";
+                    $choixEchange = strtolower(readline("Voulez-vous échanger votre arme actuelle avec la nouvelle ? (oui/non) : "));
 
-                if ($choixEchange === 'oui') {
-                    $this->echangeArme($personnageId, $armeExistante['id'], $objet['id']);
+                    if ($choixEchange === 'oui') {
+                        $this->echangeArme($personnageId, $armeExistante['id'], $objet['id']);
+                    }
+                } else {
+                    $this->ajouterObjetDansInventaire($personnageId, $objet['id']);
+                    echo "Vous avez obtenu une nouvelle arme : {$objet['nom']}!\n";
                 }
             } else {
                 $this->ajouterObjetDansInventaire($personnageId, $objet['id']);
-                echo "Vous avez obtenu une nouvelle arme : {$objet['nom']}!\n";
+                echo "Vous avez obtenu un nouvel objet : {$objet['nom']}!\n";
             }
         } else {
-            $this->ajouterObjetDansInventaire($personnageId, $objet['id']);
-            echo "Vous avez obtenu un nouvel objet : {$objet['nom']}!\n";
+            echo "Désolé, votre réponse est incorrecte. Vous ne gagnez pas d'objet.\n";
         }
-    } else {
-        echo "Désolé, votre réponse est incorrecte. Vous ne gagnez pas d'objet.\n";
     }
-}
 
-        private function ObjetAleatoire() {
-            $sql = $this->db->prepare("SELECT * FROM objet ORDER BY RAND() LIMIT 1");
-            $sql->execute();
-            return $sql->fetch();
-        }
-        private function getArmeDansInventaire($personnageId) {
-            $sql = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId AND o.type = 'Arme'");
-            $sql->execute([
-                "personnageId" => $personnageId
-            ]);
-            return $sql->fetch();
-        }
-        
-        private function echangeArme($personnageId, $ancienneArmeId, $nouvelleArmeId) {
-            $this->retirerObjetDeInventaire($personnageId, $ancienneArmeId);
-            $this->ajouterObjetDansInventaire($personnageId, $nouvelleArmeId);
-        }
-        
-        private function ajouterObjetDansInventaire($personnageId, $objetId) {
-            $sql = $this->db->prepare("INSERT INTO inventaire_personnage (personnage_id, objet_id) VALUES (:personnageId, :objetId)");
-            $sql->execute([
-                "personnageId" => $personnageId,
-                "objetId" => $objetId
-            ]);
-        }
-        private function retirerObjetDeInventaire($personnageId, $objetId) {
-            $sql = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnageId AND objet_id = :objetId");
-            $sql->execute([
-                "personnageId" => $personnageId,
-                "objetId" => $objetId
-            ]);
-        }
+    private function objetAleatoire() {
+        $sql = $this->db->prepare("SELECT * FROM objet ORDER BY RAND() LIMIT 1");
+        $sql->execute();
+        return $sql->fetch();
+    }
+
+    private function getArmeDansInventaire($personnageId) {
+        $sql = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId AND o.type = 'Arme'");
+        $sql->execute([
+            "personnageId" => $personnageId
+        ]);
+        return $sql->fetch();
+    }
+    
+    private function echangeArme($personnageId, $ancienneArmeId, $nouvelleArmeId) {
+        $this->retirerObjetDeInventaire($personnageId, $ancienneArmeId);
+        $this->ajouterObjetDansInventaire($personnageId, $nouvelleArmeId);
+    }
+    
+    private function ajouterObjetDansInventaire($personnageId, $objetId) {
+        $sql = $this->db->prepare("INSERT INTO inventaire_personnage (personnage_id, objet_id) VALUES (:personnageId, :objetId)");
+        $sql->execute([
+            "personnageId" => $personnageId,
+            "objetId" => $objetId
+        ]);
+    }
+    private function retirerObjetDeInventaire($personnageId, $objetId) {
+        $sql = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnageId AND objet_id = :objetId");
+        $sql->execute([
+            "personnageId" => $personnageId,
+            "objetId" => $objetId
+        ]);
+    }
 
     private function appliquerEffetPiege($personnageId)
     {
@@ -399,12 +395,8 @@ class DAO
                             "personnageId" => $personnageId
                         ]);
                         $arme = $sqlArme->fetch();
-                    
-                        if ($arme) {
-                            $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
-                        } else {
-                            $degatsJoueur = max(0, $personnage['points_d_attaque']);
-                        }
+                        $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
+
                         $this->infligerDegatsMonstre($monstreId, $degatsJoueur);
                 
                         echo "Vous avez infligé $degatsJoueur points de dégâts au monstre! \n";
