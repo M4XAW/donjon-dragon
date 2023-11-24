@@ -18,6 +18,23 @@ class DAO
         ]);
     }
 
+    public function verificationPlaceInventaire($personnageId)
+    {
+        $sql = $this->db->prepare("SELECT COUNT(*) as nb FROM inventaire_personnage WHERE personnage_id = :personnageId");
+        $sql->execute([
+            "personnageId" => $personnageId
+        ]);
+        $result = $sql->fetch();
+        
+        if ($result['nb'] >= 10) {
+            echo "Votre inventaire est plein !\n";
+            return false;
+        } else {
+            echo "Vous avez récupéré un objet !\n";
+            return true;
+        }
+    }
+
     public function choixPersonnage()
     {
         while(true) {
@@ -343,6 +360,8 @@ class DAO
 }
 
 $dao = new DAO($db);
+
+$dao->verificationPlaceInventaire(1);
 
 echo "Que voulez-vous faire ?\n";
 echo "1. Jouer\n";
