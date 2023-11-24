@@ -18,6 +18,15 @@ class DAO
         ]);
     }
 
+    public function infligerDegatsMonstre($monstreId, $degats)
+    {
+        $sql = $this->db->prepare("UPDATE monstres SET points_de_vie = points_de_vie - :degats WHERE id = :monstreId");
+        $sql->execute([
+            "degats" => $degats,
+            "monstreId" => $monstreId,
+        ]);
+    }
+
     public function verificationPlaceInventaire($personnageId)
     {
         $sql = $this->db->prepare("SELECT COUNT(*) as nb FROM inventaire_personnage WHERE personnage_id = :personnageId");
@@ -121,24 +130,6 @@ class DAO
     //     }
     // } 
 
-    public function afficherInventaire($id)
-    {
-        echo "Inventaire : ";
-        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
-        $sql->execute([
-            "id" => $id
-        ]);
-        $result = $sql->fetchAll();
-
-        foreach ($result as $item) {
-            echo $item["nom"] . " | ";
-        }
-
-        if (count($result) == 0) {
-            echo "Aucun item\n";
-        }
-    }
-
     public function afficherInfosPersonnage($id)
     {
         echo "\033[2J\033[;H";
@@ -156,7 +147,22 @@ class DAO
         }
 
         echo "👤 " . $result["nom"] . " | ❤️  " . $result["points_de_vie"] . " | 🗡️  " . $result["points_d_attaque"] . " | 🛡️  " . $result["points_de_defense"] . " | 🔥 " . $result["experience"] . " | 🎖️  " . $result["niveau"] . "\n\n";
-        $this->afficherInventaire($id);
+
+        echo "Inventaire : ";
+        $sql = $this->db->prepare("SELECT ip.id, o.nom FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :id");
+        $sql->execute([
+            "id" => $id
+        ]);
+        $result = $sql->fetchAll();
+
+        foreach ($result as $item) {
+            echo $item["nom"] . " | ";
+        }
+
+        if (count($result) == 0) {
+            echo "Aucun item\n";
+        }
+
         echo "\n\n";
     }
 
@@ -177,6 +183,7 @@ class DAO
             "personnageId" => $personnageId,
         ]);
     }
+    
     private function afficherInfosSalle($salleId, $personnageId)
     {
         $sql = $this->db->prepare("SELECT * FROM salles WHERE id = :salleId");
@@ -202,12 +209,15 @@ class DAO
                 $this->gestionCombat($personnageId, $result["monstre_id"]);
                 break;
             case "Marchand":
+                $this->afficherInfosPersonnage($personnageId);
                 $this->afficherOptionsMarchand($personnageId, $result["id"]);
                 break;
             case "Piège":
+                $this->afficherInfosPersonnage($personnageId);
                 $this->appliquerEffetPiege($personnageId);
                 break;
             case "Questions":
+                $this->afficherInfosPersonnage($personnageId);
                 $this->afficherQuestion($result["id"]);
                 break;
             default:
@@ -215,6 +225,7 @@ class DAO
                 break;
         }
     }
+
     private function getMonstreId($salleId)
     {
         $sql = $this->db->prepare("SELECT monstre_id FROM salles WHERE id = :salleId");
@@ -225,6 +236,7 @@ class DAO
 
         return $result ? $result['monstre_id'] : null;
     }
+
     private function afficherOptionsMarchand($personnageId, $salleId)
     {
         echo "Vous entrez dans la salle d'un marchand !\n";
@@ -234,12 +246,11 @@ class DAO
     private function afficherQuestion($salleId)
     {
         echo "Vous entrez dans une salle de questions !\n";
-
     }
 
     private function appliquerEffetPiege($personnageId)
     {
-        echo "Vous entrez dans une salle de piège !\n";
+        echo "Vous entrez dans une salle de piège ! ";
 
         sleep(2);
         echo "\033[2J\033[;H";
@@ -254,9 +265,11 @@ class DAO
             $choix = readline();
 
             if ($choix == $positionPiege) {
-                $this->infligerDegatsPersonnage($personnageId, 10);
-                echo "Vous êtes tombé dans un piège !\n";
-                echo "Vous avez perdu 10 points de vie.\n";
+                $degatsPiege = rand(5, 15);
+                $this->infligerDegatsPersonnage($personnageId, $degatsPiege);
+                echo "\nVous êtes tombé dans un piège !\n";
+                sleep(2);
+                echo "Vous avez perdu " . $degatsPiege . " points de vie !\n";
                 break;
             } else if ($choix != $positionPiege && ($choix == 1 || $choix == 2)) {
                 echo "Vous avez évité le piège !\n";
@@ -283,59 +296,56 @@ class DAO
         $sql->execute([
             "monstreId" => $monstreId,
         ]);
+
         $monstre = $sql->fetch();
 
         while ($personnage['points_de_vie'] > 0 && $monstre['points_de_vie'] > 0) {
-            echo "\033[2J\033[;H";
-            
-            $this->afficherInfosPersonnage($personnageId);
-
-
-            echo "Options de combat:\n";
-            echo "1. Attaquer\n";
-            echo "2. Se défendre\n\n";
-
-            $choixCombat = readline();
-
-            switch ($choixCombat) {
-                case 1:
-                    $sqlArme = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId");
-                    $sqlArme->execute([
-                        "personnageId" => $personnageId
-                    ]);
-                    $arme = $sqlArme->fetch();
-                    $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
-                
-                    $sql = $this->db->prepare("UPDATE monstres SET points_de_vie = points_de_vie - :degats WHERE id = :monstreId");
-                    $sql->execute([
-                        "degats" => $degatsJoueur,
-                        "monstreId" => $monstreId,
-                    ]);
-                
-                    echo "\033[2J\033[;H";
-                
-                    echo "Vous avez infligé $degatsJoueur points de dégâts au monstre!\n";
-                    break;
-                case 2:
-                    $degatsMonstre = max(0, $monstre['points_d_attaque'] - $personnage['points_de_defense']);
-                    $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
-
-                    echo "Vous avez subi $degatsMonstre points de dégâts!\n";
-                    break;
-                default:
-                    echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
-            }
-
             $personnage = $this->getPersonnage($personnageId);
             $monstre = $this->getMonstre($monstreId);
 
             if ($monstre['points_de_vie'] > 0) {
-                $degatsMonstre = max(0, $monstre['points_d_attaque']);
+                echo "\033[2J\033[;H";
+            
+                $this->afficherInfosPersonnage($personnageId);
+    
+                echo "Options de combat:\n";
+                echo "1. Attaquer\n";
+                echo "2. Se défendre\n\n";
+    
+                $choixCombat = readline();
+    
+                echo "\033[2J\033[;H";
 
-                $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
+                switch ($choixCombat) {
+                    case 1:
+                        $sqlArme = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId");
+                        $sqlArme->execute([
+                            "personnageId" => $personnageId
+                        ]);
+                        $arme = $sqlArme->fetch();
+                        $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
 
-                $personnage = $this->getPersonnage($personnageId);
-                echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
+                        $this->infligerDegatsMonstre($monstreId, $degatsJoueur);
+                                        
+                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre ! ";
+
+                        sleep(2);
+
+                        $degatsMonstre = max(0, $monstre['points_d_attaque']);
+
+                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
+
+                        sleep(2);
+        
+                        echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
+                        break;
+                    case 2:
+                        $degatsMonstre = max(0, $monstre['points_d_attaque'] - $personnage['points_de_defense']);    
+                        echo "\nVous avez esquivé l'attaque du monstre ! ";  
+                        break;
+                    default:
+                        echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
+                }
             } else {
                 $sql = $this->db->prepare("UPDATE personnages SET experience = experience + :experience WHERE id = :personnageId");
                 $sql->execute([
@@ -343,10 +353,14 @@ class DAO
                     "personnageId" => $personnageId,
                 ]);
 
+                echo "\033[2J\033[;H";
+
                 echo "Vous avez vaincu le monstre!\n";
 
+                sleep(2);
+
                 $personnage = $this->getPersonnage($personnageId);
-                echo "Vous avez gagné " . $monstre['experience'] . " points d'expérience!\n";
+                echo "Vous avez gagné " . $monstre['experience'] . " points d'expérience! ";
             }
 
             if ($personnage['points_de_vie'] < 0) {
