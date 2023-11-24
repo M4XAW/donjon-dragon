@@ -44,32 +44,10 @@ class Personnage
     public function getNiveau() {
         return $this->niveau;
     }
-}
 
-$dao = new DAO($db);
-
-echo "Que voulez-vous faire ?\n";
-echo "1. Jouer\n";
-echo "2. Nouvelle partie\n";
-echo "3. Quitter\n\n";
-
-$choix = readline();
-
-echo "\033[2J\033[;H";
-
-switch($choix) {
-    case 1:
-        $dao->choixPersonnage();
-        break;
-    case 2:
-        echo "Vous chargez une partie\n";
-        break;
-    case 3:
-        echo "Vous quittez le jeu\n";
-        break;
-    default:
-        echo "Choix invalide\n";
-        break;
+    public function setPointDeVie($pointDeVie) {
+        $this->pointDeVie = $pointDeVie;
+    }
 }
 
 ?>
