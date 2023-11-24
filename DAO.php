@@ -256,7 +256,6 @@ class DAO
         $objet = $this->ObjetAleatoire();
         $nomObjet = $objet['nom'];
         echo "Vous avez obtenu un nouvel objet : $nomObjet!\n";
-        // Si l'objet est de type arme
         if ($objet['type'] === 'Arme') {
             $armeExistante = $this->getArmeDansInventaire($personnageId);
             
