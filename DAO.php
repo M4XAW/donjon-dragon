@@ -9,9 +9,35 @@ class DAO
         $this->db = $db;
     }
 
+    public function infligerDegatsPersonnage($personnageId, $degats)
+    {
+        $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - :degats WHERE id = :personnageId");
+        $sql->execute([
+            "degats" => $degats,
+            "personnageId" => $personnageId,
+        ]);
+    }
+
+    public function verificationPlaceInventaire($personnageId)
+    {
+        $sql = $this->db->prepare("SELECT COUNT(*) as nb FROM inventaire_personnage WHERE personnage_id = :personnageId");
+        $sql->execute([
+            "personnageId" => $personnageId
+        ]);
+        $result = $sql->fetch();
+        
+        if ($result['nb'] >= 10) {
+            echo "Votre inventaire est plein !\n";
+            return false;
+        } else {
+            echo "Vous avez récupéré un objet !\n";
+            return true;
+        }
+    }
+
     public function choixPersonnage()
     {
-        while (true) {
+        while(true) {
             echo "\033[2J\033[;H";
 
             echo "Voici la liste des personnages\n\n";
@@ -290,12 +316,36 @@ class DAO
     private function appliquerEffetPiege($personnageId)
     {
         echo "Vous entrez dans une salle de piège !\n";
-        echo "Vous perdez 10 points de vie !\n";
 
-        $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - 10 WHERE id = :personnageId");
-        $sql->execute([
-            "personnageId" => $personnageId,
-        ]);
+        sleep(2);
+        echo "\033[2J\033[;H";
+
+        $positionPiege = rand(1, 2); 
+
+        while(true) {
+            echo "Que voulez-vous faire ?\n";
+            echo "1. Aller à gauche\n";
+            echo "2. Aller à droite\n\n";
+    
+            $choix = readline();
+
+            if ($choix == $positionPiege) {
+                $this->infligerDegatsPersonnage($personnageId, 10);
+                echo "Vous êtes tombé dans un piège !\n";
+                echo "Vous avez perdu 10 points de vie.\n";
+                break;
+            } else if ($choix != $positionPiege && ($choix == 1 || $choix == 2)) {
+                echo "Vous avez évité le piège !\n";
+                break;
+            } else {
+                echo "\nChoix invalide ! Veuillez choisir 1 ou 2 ";
+                sleep(1);
+                echo "\033[2J\033[;H";
+                continue;
+            }
+
+            break;
+        }
     }
 
     private function gestionCombat($personnageId, $monstreId)
@@ -315,6 +365,7 @@ class DAO
             echo "\033[2J\033[;H";
             
             $this->afficherInfosPersonnage($personnageId);
+
 
             echo "Options de combat:\n";
             echo "1. Attaquer\n";
@@ -343,11 +394,7 @@ class DAO
                     break;
                 case 2:
                     $degatsMonstre = max(0, $monstre['points_d_attaque'] - $personnage['points_de_defense']);
-                    $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - :degats WHERE id = :personnageId");
-                    $sql->execute([
-                        "degats" => $degatsMonstre,
-                        "personnageId" => $personnageId,
-                    ]);
+                    $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
 
                     echo "Vous avez subi $degatsMonstre points de dégâts!\n";
                     break;
@@ -361,11 +408,7 @@ class DAO
             if ($monstre['points_de_vie'] > 0) {
                 $degatsMonstre = max(0, $monstre['points_d_attaque']);
 
-                $sql = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie - :degats WHERE id = :personnageId");
-                $sql->execute([
-                    "degats" => $degatsMonstre,
-                    "personnageId" => $personnageId,
-                ]);
+                $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
 
                 $personnage = $this->getPersonnage($personnageId);
                 echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";

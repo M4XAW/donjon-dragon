@@ -49,11 +49,6 @@ class SallePiege extends Salle
     public function setDegats($degats) {
         $this->degats = $degats;
     }
-
-    public function activerPiege(Personnage $personnage) {
-        $personnage->setPointDeVie($personnage->getPointDeVie() - $this->degats);
-        echo "Vous avez perdu " . $this->degats . " points de vie.\n";
-    }
 }
 
 class SalleMarchand extends Salle 
