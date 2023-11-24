@@ -45,59 +45,71 @@ class DAO
     }
 
     public function choixPersonnage()
-{
-    while (true) {
-        echo "\033[2J\033[;H";
+    {
+        while (true) {
+            echo "\033[2J\033[;H";
 
-        echo "Voici la liste des personnages\n\n";
-        $sql = $this->db->prepare("SELECT * FROM personnages");
-        $sql->execute();
-        $result = $sql->fetchAll();
+            echo "Voici la liste des personnages\n\n";
+            $sql = $this->db->prepare("SELECT * FROM personnages");
+            $sql->execute();
+            $result = $sql->fetchAll();
 
-        foreach ($result as $personnage) {
-            echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
-        }
-
-        if (count($result) == 0) {
-            echo "Aucun personnage\n";
-        }
-
-        echo "\n";
-
-        $choix = readline();
-
-        if ($choix == 1 || $choix == 2 || $choix == 3) {
-            $personnage = $this->getPersonnage($choix);
-            $personnageId = $choix;
-
-            while($personnage['points_de_vie'] > 0) {
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-
-                sleep(2);
-
-                echo "\033[2J\033[;H";
-
-                echo "Voulez-vous continuer ? (oui/non) : ";
-                $continuer = strtolower(readline());
-
-                if ($continuer != 'oui') {
-                    echo "Vous avez quitté le jeu.\n";
-                    exit;
-                }
+            foreach ($result as $personnage) {
+                echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
             }
-        } else {
-            echo "Personnage introuvable ";
-            sleep(1);
-            continue;
+
+            if (count($result) == 0) {
+                echo "Aucun personnage\n";
+            }
+
+            echo "\n";
+
+            $choix = readline();
+
+            if ($choix == 1 || $choix == 2 || $choix == 3) {
+                return $choix;
+            } else {
+                echo "Personnage introuvable ";
+                sleep(1);
+                continue;
+            }
+
+            break;
         }
-
-        break;
     }
-}
 
+    public function gestionSalles($choix)
+    {
+        while(true) {
+            $personnage = $this->getPersonnage($choix);
+            
+            if ($personnage['points_de_vie'] <= 0) {
+                echo "Vous êtes mort !\n";
+                return;
+            }
+            
+            // $salleId = $this->choisirSalleAleatoire();
+            $salleId = 1;
+            $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+            $this->afficherInfosSalle($salleId, $personnage['id']);
 
+            sleep(2);
+
+            echo "\033[2J\033[;H";
+
+            echo "Voulez-vous continuer ? (oui/non) : ";
+            $continuer = strtolower(readline());
+
+            //tant que le joueur ne choisi pas oui ou non, il repose la question
+
+            if ($continuer == "non") {
+                echo "Vous avez quitté le jeu.\n";
+                exit;
+            } else {
+                continue;
+            }
+        }
+    }
 
     public function getPersonnage($id)
     {
@@ -246,8 +258,58 @@ class DAO
 
     private function afficherOptionsMarchand($personnageId, $salleId)
     {
-        echo "Vous entrez dans la salle d'un marchand !\n";
+        echo "Vous entrez dans la salle d'un marchand !\n\n";
 
+        $objetDemande = $this->objetAleatoire();
+        $objetEchange = $this->objetAleatoire();
+
+        while ($objetDemande['id'] == $objetEchange['id']) {
+            $objetEchange = $this->objetAleatoire();
+        }
+        
+        echo "Le marchand vous propose un(e) " . $objetDemande['nom'] . " contre un(e) " . $objetEchange['nom'] . ".\n\n";
+
+        while (true) {
+            echo "Que voulez-vous faire ?\n";
+            echo "1. Accepter l'échange\n";
+            echo "2. Refuser l'échange\n\n";
+
+            $choix = readline();
+
+            echo "\033[2J\033[;H";
+
+            if ($choix == 1) {
+                if ($this->personnagePossedeObjet($personnageId, $objetEchange['id'])) {
+                    $this->ajouterObjetDansInventaire($personnageId, $objetDemande['id']);
+                    $this->retirerObjetDeInventaire($personnageId, $objetEchange['id']);
+                    
+                    echo "Vous avez échangé votre " . $objetEchange['nom'] . " contre un " . $objetDemande['nom'] . ". ";
+                } else {
+                    echo "Vous n'avez pas l'objet " . $objetEchange['nom'] . " dans votre inventaire.\n";
+                }
+                break;
+            } else if ($choix == 2) {
+                echo "Vous avez refusé l'échange ";
+                break;
+            } else {
+                echo "Choix invalide. Veuillez choisir 1 ou 2 ";
+                continue;
+            }
+            
+            sleep(2);
+        }
+    }
+
+    private function personnagePossedeObjet($personnageId, $objetId)
+    {
+        $sql = $this->db->prepare("SELECT COUNT(*) as nb FROM inventaire_personnage WHERE personnage_id = :personnageId AND objet_id = :objetId");
+        $sql->execute([
+            "personnageId" => $personnageId,
+            "objetId" => $objetId,
+        ]);
+        $result = $sql->fetch();
+
+        return $result['nb'] > 0;
     }
 
     private function afficherQuestion($salleId, $personnageId)
@@ -351,7 +413,7 @@ class DAO
             if ($choix == $positionPiege) {
                 $degatsPiege = rand(5, 15);
                 $this->infligerDegatsPersonnage($personnageId, $degatsPiege);
-                echo "\nVous êtes tombé dans un piège !\n";
+                echo "\nVous êtes tombé dans un piège ! ";
                 sleep(2);
                 echo "Vous avez perdu " . $degatsPiege . " points de vie !\n";
                 break;
@@ -387,6 +449,13 @@ class DAO
             $personnage = $this->getPersonnage($personnageId);
             $monstre = $this->getMonstre($monstreId);
 
+            if ($personnage['points_de_vie'] <= 0) {
+                echo "\033[2J\033[;H";
+                echo "Vous avez été vaincu par le monstre !\n";
+                sleep(2);
+                exit;
+            }    
+
             if ($monstre['points_de_vie'] > 0) {
                 echo "\033[2J\033[;H";
             
@@ -410,21 +479,25 @@ class DAO
                         $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
 
                         $this->infligerDegatsMonstre($monstreId, $degatsJoueur);
+
+                        echo "\033[2J\033[;H";
                 
-                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre! \n";
+                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre ! ";
                         sleep(2);
             
                         $degatsMonstre = max(0, $monstre['points_d_attaque']);
         
                         $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
                     
+                        echo "\033[2J\033[;H";
+                        echo "Le monstre vous a infligé $degatsMonstre points de dégâts ! ";
                         sleep(2);
- 
-                        echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
+                        
                         break;
                     case 2:
                         $degatsMonstre = max(0, $monstre['points_d_attaque'] - $personnage['points_de_defense']);    
-                        echo "\nVous avez esquivé l'attaque du monstre ! ";  
+                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
+                        echo "\nVous avez paré l'attaque du monstre ! Vous avez perdu $degatsMonstre points de vie.\n";
                         break;
                     default:
                         echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
@@ -438,22 +511,16 @@ class DAO
 
                 echo "\033[2J\033[;H";
 
-                echo "Vous avez vaincu le monstre!\n";
+                echo "Vous avez vaincu le monstre !";
 
-                sleep(2);
+                sleep(3);
 
                 $personnage = $this->getPersonnage($personnageId);
                 echo "Vous avez gagné " . $monstre['experience'] . " points d'expérience! ";
-            }
-
-            if ($personnage['points_de_vie'] < 0) {
-                echo "Vous avez été vaincu par le monstre!\n";
-            }
-            
-            sleep(3);
+                sleep(2);
+            }            
         }
     }
-
 }
 
 $dao = new DAO($db);
@@ -469,7 +536,8 @@ echo "\033[2J\033[;H";
 
 switch ($choix) {
     case 1:
-        $dao->choixPersonnage();
+        $choix = $dao->choixPersonnage();
+        $dao->gestionSalles($choix);
         break;
     case 2:
         echo "Vous chargez une partie\n";
