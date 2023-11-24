@@ -336,7 +336,6 @@ class DAO
             $objet = $this->objetAleatoire();
             $nomObjet = $objet['nom'];
             echo "Vous avez obtenu un nouvel objet : $nomObjet!\n";
-            // Si l'objet est de type arme
             if ($objet['type'] === 'Arme') {
                 $armeExistante = $this->getArmeDansInventaire($personnageId);
                 
@@ -387,13 +386,21 @@ class DAO
         ]);
     }
     private function retirerObjetDeInventaire($personnageId, $objetId) {
-        $sql = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnageId AND objet_id = :objetId");
-        $sql->execute([
+        $sqlSelect = $this->db->prepare("SELECT * FROM objet WHERE id = :objetId");
+        $sqlSelect->execute([
+            "objetId" => $objetId
+        ]);
+        $objetInfo = $sqlSelect->fetch();
+    
+        // Supprimer l'objet de l'inventaire du personnage
+        $sqlDelete = $this->db->prepare("DELETE FROM inventaire_personnage WHERE personnage_id = :personnageId AND objet_id = :objetId LIMIT 1");
+        $sqlDelete->execute([
             "personnageId" => $personnageId,
             "objetId" => $objetId
         ]);
     }
-
+    
+    
     private function appliquerEffetPiege($personnageId)
     {
         echo "Vous entrez dans une salle de piège ! ";
@@ -457,13 +464,14 @@ class DAO
             }    
 
             if ($monstre['points_de_vie'] > 0) {
-                echo "\033[2J\033[;H";
+                //echo "\033[2J\033[;H";
             
                 $this->afficherInfosPersonnage($personnageId);
     
                 echo "Options de combat:\n";
                 echo "1. Attaquer\n";
-                echo "2. Se défendre\n\n";
+                echo "2. Se défendre\n";
+                echo "3. Se soigner\n\n";
     
                 $choixCombat = readline();
     
@@ -499,8 +507,26 @@ class DAO
                         $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
                         echo "\nVous avez paré l'attaque du monstre ! Vous avez perdu $degatsMonstre points de vie.\n";
                         break;
-                    default:
-                        echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
+                        case 3:
+                            echo "Cas 3 : Utiliser une potion de soin\n";
+                            
+                            $potions = $this->getPotionsDansInventaire($personnageId);
+                            
+                            if ($potions) {
+                                $potionChoisie = reset($potions); 
+                        
+                                $objetId = $potionChoisie['objet_id'];
+                        
+                                $this->soignerPersonnage($personnageId, $potionChoisie,['taux_soin']);
+                                $this->retirerObjetDeInventaire($personnageId, $objetId);
+                                sleep(20);
+                            } else {
+                                echo "Vous n'avez pas de potions de soin dans votre inventaire.\n";
+                            }
+                            break;
+                                             
+                default:
+                    echo "Choix invalide. Veuillez choisir 1 ou 2.\n";
                 }
             } else {
                 $sql = $this->db->prepare("UPDATE personnages SET experience = experience + :experience WHERE id = :personnageId");
@@ -511,7 +537,10 @@ class DAO
 
                 echo "\033[2J\033[;H";
 
-                echo "Vous avez vaincu le monstre !";
+                echo "Vous avez vaincu le monstre!\n";
+                $objet = $this->objetAleatoire();
+                $nomObjet = $objet['nom'];
+                echo "Vous avez obtenu un nouvel objet : $nomObjet!\n";
 
                 sleep(3);
 
@@ -521,6 +550,25 @@ class DAO
             }            
         }
     }
+    private function getPotionsDansInventaire($personnageId)
+    {
+        $sql = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId AND o.type = 'Potion'");
+        $sql->execute([
+            "personnageId" => $personnageId
+        ]);
+        return $sql->fetchAll();
+    }
+    private function soignerPersonnage($personnageId, $objetId, $tauxSoin)
+{
+    $sqlUpdate = $this->db->prepare("UPDATE personnages SET points_de_vie = points_de_vie + 15 WHERE id = :personnageId");
+    $sqlUpdate->execute([
+        "personnageId" => $personnageId
+    ]);
+
+    $this->retirerObjetDeInventaire($personnageId, $objetId);
+
+    echo "Vous avez utilisé la potion de soin et vous avez été soigné de 15 points de vie!\n";
+}
 }
 
 $dao = new DAO($db);
