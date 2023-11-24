@@ -45,51 +45,58 @@ class DAO
     }
 
     public function choixPersonnage()
-    {
-        while(true) {
-            echo "\033[2J\033[;H";
+{
+    while (true) {
+        echo "\033[2J\033[;H";
 
-            echo "Voici la liste des personnages\n\n";
-            $sql = $this->db->prepare("SELECT * FROM personnages");
-            $sql->execute();
-            $result = $sql->fetchAll();
+        echo "Voici la liste des personnages\n\n";
+        $sql = $this->db->prepare("SELECT * FROM personnages");
+        $sql->execute();
+        $result = $sql->fetchAll();
 
-            foreach ($result as $personnage) {
-                echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
-            }
-
-            if (count($result) == 0) {
-                echo "Aucun personnage\n";
-            }
-
-            echo "\n";
-
-            $choix = readline();
-
-            if ($choix == 1) {
-                $personnage = $this->getPersonnage(1);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-            } else if ($choix == 2) {
-                $personnage = $this->getPersonnage(2);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-            } else if ($choix == 3) {
-                $personnage = $this->getPersonnage(3);
-                $salleId = $this->choisirSalleAleatoire();
-                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
-                $this->afficherInfosSalle($salleId, $personnage['id']);
-            } else {
-                echo "Personnage introuvable ";
-                sleep(1);
-                continue;
-            }
-
-            break;
+        foreach ($result as $personnage) {
+            echo $personnage["id"] . ". " . $personnage["nom"] . "\n";
         }
+
+        if (count($result) == 0) {
+            echo "Aucun personnage\n";
+        }
+
+        echo "\n";
+
+        $choix = readline();
+
+        if ($choix == 1 || $choix == 2 || $choix == 3) {
+            $personnage = $this->getPersonnage($choix);
+            $personnageId = $choix;
+
+            while($personnage['points_de_vie'] > 0) {
+                $salleId = $this->choisirSalleAleatoire();
+                $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
+                $this->afficherInfosSalle($salleId, $personnage['id']);
+
+                sleep(2);
+
+                echo "\033[2J\033[;H";
+
+                echo "Voulez-vous continuer ? (oui/non) : ";
+                $continuer = strtolower(readline());
+
+                if ($continuer != 'oui') {
+                    echo "Vous avez quitté le jeu.\n";
+                    exit;
+                }
+            }
+        } else {
+            echo "Personnage introuvable ";
+            sleep(1);
+            continue;
+        }
+
+        break;
     }
+}
+
 
 
     public function getPersonnage($id)
@@ -395,26 +402,24 @@ class DAO
 
                 switch ($choixCombat) {
                     case 1:
-                        $possedeArme = $this->getArmeDansInventaire($personnageId);
-
-                        if($possedeArme) {
-                            $degatsJoueur = max(0, $personnage['points_d_attaque'] + $possedeArme['degats']); 
-                        } else {
-                            $degatsJoueur = max(0, $personnage['points_d_attaque']);
-                        }
+                        $sqlArme = $this->db->prepare("SELECT * FROM inventaire_personnage ip JOIN objet o ON ip.objet_id = o.id WHERE ip.personnage_id = :personnageId");
+                        $sqlArme->execute([
+                            "personnageId" => $personnageId
+                        ]);
+                        $arme = $sqlArme->fetch();
+                        $degatsJoueur = max(0, $personnage['points_d_attaque'] + $arme['degats']);
 
                         $this->infligerDegatsMonstre($monstreId, $degatsJoueur);
-                                        
-                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre ! ";
-
+                
+                        echo "Vous avez infligé $degatsJoueur points de dégâts au monstre! \n";
                         sleep(2);
-
+            
                         $degatsMonstre = max(0, $monstre['points_d_attaque']);
-
-                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
-
-                        sleep(2);
         
+                        $this->infligerDegatsPersonnage($personnageId, $degatsMonstre);
+                    
+                        sleep(2);
+ 
                         echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
                         break;
                     case 2:
