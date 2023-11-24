@@ -70,10 +70,22 @@ class DAO
             $personnage = $this->getPersonnage($choix);
             $personnageId = $choix;
 
-            while ($personnage['points_de_vie'] > 0) {
+            while($personnage['points_de_vie'] > 0) {
                 $salleId = $this->choisirSalleAleatoire();
                 $this->mettreAJourSalleActuelle($personnage['id'], $salleId);
                 $this->afficherInfosSalle($salleId, $personnage['id']);
+
+                sleep(2);
+
+                echo "\033[2J\033[;H";
+
+                echo "Voulez-vous continuer ? (oui/non) : ";
+                $continuer = strtolower(readline());
+
+                if ($continuer != 'oui') {
+                    echo "Vous avez quitté le jeu.\n";
+                    exit;
+                }
             }
         } else {
             echo "Personnage introuvable ";
