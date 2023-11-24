@@ -274,7 +274,7 @@ class DAO
                     "personnageId" => $personnageId,
                 ]);
     
-                $personnage = $this->getPersonnage($personnageId);
+                //$personnage = $this->getPersonnage($personnageId);
                 echo "Le monstre vous a infligé $degatsMonstre points de dégâts!\n";
                 echo "Points de vie restants du personnage : {$personnage['points_de_vie']}\n";
             }
