@@ -3,7 +3,7 @@
 include("config.php");
 include("DAO.php");
 
-class Personnage 
+class Personnage // Création de la classe Personnage
 {
     public $nom;
     public $pointDeVie;
@@ -21,8 +21,8 @@ class Personnage
         $this->niveau = $niveau;
     }
 
-    public function getNom() {
-        return $this->nom;
+    public function getNom() { // Création de la fonction pour récupérer le nom du personnage
+        return $this->nom; 
     }
 
     public function getPointDeVie() {
@@ -45,7 +45,7 @@ class Personnage
         return $this->niveau;
     }
 
-    public function setPointDeVie($pointDeVie) {
+    public function setPointDeVie($pointDeVie) { // Création de la fonction pour modifier le nom du personnage
         $this->pointDeVie = $pointDeVie;
     }
 }
